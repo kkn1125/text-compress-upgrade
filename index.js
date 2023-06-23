@@ -137,6 +137,7 @@ function duplicateItemRemove(arr) {
 }
 
 function compress(s) {
+  // window.parent.completeFiltered = [];
   if (s.trim() === "") {
     this?.classList?.add?.("error");
     setTimeout(() => {
@@ -188,15 +189,36 @@ function compress(s) {
   }
   // return words;
 
-  const split = words.slice(0, words.match(/[0-9]/).index);
+  const split = words.slice(0, words.match(/[0-9]/)?.index || 0);
   console.log("words", words);
+  console.log("words2", window.parent.completeFiltered[0]);
+
   if (findDuplicateWord(split).length > 0) {
+    const split2 = words.slice(
+      words.lastIndexOf(window.parent.completeFiltered[0]) +
+        window.parent.completeFiltered[0].length
+    );
+    //console.log("words", words);
+    //console.log("third", split2);
     const secondCompress = compress(split);
-    const done = words.slice(words.match(/[0-9]/).index);
+    //const thirdCompress = split2?compress(split2):'';
+    //console.log(thirdCompress);
+    const done = words.slice(
+      words.match(/[0-9]/).index
+      //words.lastIndexOf(
+      //  window.parent.completeFiltered[0]
+      //) +
+      //  window.parent.completeFiltered[0].length
+    );
+    console.log(
+      "done2",
+      words.lastIndexOf(window.parent.completeFiltered[0]) +
+        window.parent.completeFiltered[0].length
+    );
     console.log("done", done);
     console.log("done", secondCompress);
     if (done && secondCompress) {
-      words = secondCompress + done;
+      words = secondCompress + done; //+ thirdCompress;
     }
   }
 
@@ -212,15 +234,15 @@ function findDuplicateWord(s) {
     for (let i = 0; i < s.length; i++) {
       const sliced = s.slice(i, i + q);
       const next = s.slice(i + q, i + q + q);
-      // console.log(sliced);
       if (sliced.length < q) continue;
-      if (s.match(new RegExp(sliced, "g")).length > 1 && next === sliced) {
+      if (
+        s.match(new RegExp(sliced, "g")).length > 1 &&
+        next === sliced
+      ) {
         selector.push(sliced);
       }
-      // console.log(sliced);
     }
   }
-  // console.log("duplicate words", selector);
 
   /* 마지막 문자가 제일 압축률이 큼. 혹은 길이가 같은 문자가 더 있다면 모두 추출 */
   const filterSelector = duplicateItemRemove(selector);
@@ -229,7 +251,7 @@ function findDuplicateWord(s) {
       item.length ===
         selector[selector.length - 1].length /*  || item.length > 1 */ ||
       !!filterSelector.find((it) => {
-        console.log("filter word", item);
+        // console.log("filter word", item);
         return (
           !it.includes(item) ||
           (it.match(new RegExp(`(${item})`, "g")).length || 0) <= 1
@@ -238,7 +260,7 @@ function findDuplicateWord(s) {
   );
 
   /* 마지막 문자보다 더 짧은 문자 중 마지막 문자에 포함되는 문자가 있을 시 배제한다. */
-  // console.log("filtered", filtered);
+
   const filtered = duplicateItemRemove(
     filtereds.map((filter) => duplicateRemove(filter))
   );
@@ -249,24 +271,27 @@ function findDuplicateWord(s) {
       .concat(...filtered.slice(currentIndex + 1));
     return (
       filtered[i] === filtered[filtered.length - 1] ||
-      others.reverse().every((it) => !it.includes(duplicateRemove(item))) ||
+      others
+        .reverse()
+        .every((it) => !it.includes(duplicateRemove(item))) ||
       others
         .reverse()
         .every(
           (it) =>
             !it.includes(item) ||
             (it.includes(item) &&
-              (it.match(new RegExp(`(${item})`, "g"))?.length || 0) <= 1 &&
-              item.length === 1) ||
-            it.slice(it.indexOf(item), it.indexOf(item) + item.length) ===
-              it.slice(
-                it.indexOf(item) + item.length,
-                it.indexOf(item) + item.length + item.length
-              )
+              (it.match(new RegExp(`(${item})`, "g"))?.length || 0) <=
+                1 &&
+              item.length === 1)
         )
     );
   });
   console.log("complete filtered", completeFiltered);
+  // if (!window.parent.completeFiltered) {
+  //   window.parent.completeFiltered = [];
+  // }
+  window.parent.completeFiltered.push(...completeFiltered);
+  console.log(completeFiltered);
   return completeFiltered;
 }
 
