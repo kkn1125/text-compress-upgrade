@@ -33,11 +33,11 @@
         margin-bottom: 0.5rem;
         padding: 0.1rem 0.1rem;
       }
-      .hightlight {
+      .highlight {
         background-color: #4394f126;
         transition: 150ms ease-in-out;
       }
-      .hightlight:hover {
+      .highlight:hover {
         color: #ffffff;
         background-color: #4394f1;
       }
@@ -47,11 +47,174 @@
       li[onclick]:hover {
         font-weight: 700;
       }
+      #gap {
+        height: 200px;
+      }
+      #compress-text {
+        font-size: 1rem;
+        border: 1px solid #ccc;
+        padding: 0.3rem 0.8rem;
+        border-radius: 0.3rem;
+        outline: none;
+      }
+      #compress {
+        cursor: pointer;
+        border: 1px solid transparent;
+        font-weight: 700;
+        font-size: 1rem;
+        border-radius: 0.3rem;
+        text-transform: uppercase;
+        padding: 0.3rem 0.8rem;
+        background-color: #4394f1;
+        color: white;
+        top: -5px;
+        position: relative;
+        box-shadow: 0 5px 0 0 #4394f1a6;
+        transition: 150ms ease-in-out;
+        outline: none;
+      }
+      #compress:hover {
+        background-color: #257ee4;
+      }
+      @keyframes clickable {
+        0% {
+          top: -6px;
+          box-shadow: 0 5px 0 0 #4394f1a6;
+        }
+        100% {
+          top: 0px;
+          box-shadow: 0 0px 0 0 #4394f1a6;
+        }
+      }
+      @keyframes error {
+        0% {
+          top: -5px;
+          left: -6px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        10% {
+          top: -5px;
+          left: 6px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        20% {
+          top: -5px;
+          left: -8px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        30% {
+          top: -5px;
+          left: 8px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        40% {
+          top: -5px;
+          left: -6px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        50% {
+          top: -5px;
+          left: 4px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        60% {
+          top: -5px;
+          left: -7px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        70% {
+          top: -5px;
+          left: 6px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        80% {
+          top: -5px;
+          left: -4px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        90% {
+          top: -5px;
+          left: 2px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+        100% {
+          top: -5px;
+          left: 0px;
+          box-shadow: 0 5px 0 0 #e43b25a6;
+        }
+      }
+      #compress.clicked {
+        animation: clickable 150ms;
+        background-color: #257ee4;
+      }
+      #compress.error {
+        animation: error 300ms;
+        background-color: #e43b25;
+      }
+      .highlighting {
+        position: relative;
+        color: #1dcca6;
+      }
+      .highlighting:hover::after {
+        background-color: #00000056;
+        position: absolute;
+        color: #ffffff;
+        padding: 0.3rem 0.7rem;
+        left: 50%;
+        top: 100%;
+        transform: translateX(-50%);
+      }
+      #result {
+        padding: 1rem 0;
+      }
+      #result:not(:empty)::before {
+        content: "result";
+        text-transform: uppercase;
+        background-color: #1dcca6;
+        padding: 0.3rem 0.7rem;
+        color: white;
+        font-weight: 700;
+        border-radius: 0.3rem;
+        margin-right: 1rem;
+      }
+      #result:empty::before {
+        content: "Please write some testcase";
+        text-transform: uppercase;
+        background-color: #1dcca656;
+        padding: 0.3rem 0.7rem;
+        color: white;
+        font-weight: 700;
+        border-radius: 0.3rem;
+        margin-right: 1rem;
+      }
     </style>
   </head>
   <body>
     <div id="md"></div>
+    <div>
+      <input type="text" id="compress-text" />
+      <button
+        id="compress"
+        onclick="(()=> {window.parent.completeFiltered=[];compress.call(this, document.getElementById('compress-text').value)}).call(this)"
+      >
+        compress
+      </button>
+      <div id="result"></div>
+      <div id="gap"></div>
+    </div>
     <script>
+      function highlight(s) {
+        // console.log(s, window.parent.completeFiltered);
+        window.parent.completeFiltered.forEach((word) => {
+          s = s.replace(
+            new RegExp(`([0-9]+)${word}`, "g"),
+            ($1, $2) =>
+              `<strong class="highlighting" data-count="${$2}" data-word="${word}">${$1}</strong>`
+          );
+        });
+        result.innerHTML = s;
+      }
+
       window.parent.temp = "";
       const headers = [];
       fetch(location.origin + location.pathname + "/README.md").then(
@@ -98,7 +261,7 @@
               } else {
                 countBlock += 1;
                 return `<p${
-                  li.match(/[0-9]/g) ? ' class="hightlight"' : ""
+                  li.match(/[0-9]/g) ? ' class="highlight"' : ""
                 }>${li}</p>`;
               }
             })
@@ -123,6 +286,201 @@ ${headers
           );
         }
       );
+    </script>
+    <script>
+      function duplicateRemove(s) {
+        let words = s;
+        for (let i = 0; i < s.length; i++) {
+          if (words.replace(new RegExp(`[${words.at(i)}]+`, "g"), "") === "") {
+            words = words.replace(
+              new RegExp(`[${words.at(i)}]+`, "g"),
+              ($1) => $1[0]
+            );
+          } else {
+            words = words;
+          }
+        }
+        return words;
+      }
+
+      function duplicateItemRemove(arr) {
+        let temp = {};
+        for (let item of arr) {
+          temp[item] = null;
+        }
+        return Object.keys(temp);
+      }
+
+      function compress(s) {
+        // window.parent.completeFiltered = [];
+        if (s.trim() === "") {
+          this?.classList?.add?.("error");
+          setTimeout(() => {
+            this?.removeAttribute?.("class");
+          }, 300);
+          return;
+        }
+        this?.classList?.add?.("clicked");
+        setTimeout(() => {
+          this?.removeAttribute?.("class");
+        }, 150);
+        let count = 0;
+        let words = s;
+        for (let word of findDuplicateWord(s).reverse()) {
+          const counted = words.replace(new RegExp(word, "g"), ($1, i) => {
+            // console.log("slice", words.slice(i, word.length + i), i);
+            // console.log(
+            //   "next",
+            //   words.slice(word.length + i, i + word.length * 2),
+            //   word.length + i
+            // );
+            if (
+              i === 0 ||
+              i + word.length === words.indexOf(word, i + 1) ||
+              words.slice(i, word.length + i) ===
+                words.slice(i + word.length, i + word.length * 2)
+            ) {
+              count++;
+              // console.log("continue", $1, i);
+              return "";
+            } else if (
+              (i !== 0 && i + word.length !== words.indexOf(word, i + 1)) ||
+              words.slice(i, word.length + i) !==
+                words.slice(i + word.length, i + word.length * 2)
+            ) {
+              // console.log("done", word, i);
+              count++;
+              let temp = count;
+              count = 0;
+              return (temp > 1 ? temp : "") + $1;
+            } else {
+              count = 0;
+              // console.log("jump to other word");
+              return $1;
+            }
+          });
+          // console.log("counted", counted);
+          words = counted;
+        }
+        // return words;
+
+        const split = words.slice(0, words.match(/[0-9]/).index);
+        console.log("words", words);
+        console.log(
+          "words2",
+          window.parent.completeFiltered[0]
+        );
+
+        if (findDuplicateWord(split).length > 0) {
+          const split2 = words.slice(
+            words.lastIndexOf(
+              window.parent.completeFiltered[0]
+            ) +
+              window.parent.completeFiltered[0].length
+          );
+          //console.log("words", words);
+          //console.log("third", split2);
+          const secondCompress = compress(split);
+          //const thirdCompress = split2?compress(split2):'';
+          //console.log(thirdCompress);
+          const done = words.slice(
+            words.match(/[0-9]/).index
+            //words.lastIndexOf(
+            //  window.parent.completeFiltered[0]
+            //) +
+            //  window.parent.completeFiltered[0].length
+          );
+          console.log("done2", words.lastIndexOf(
+            window.parent.completeFiltered[0]
+          ) +
+            window.parent.completeFiltered[0].length);
+          console.log("done", done);
+          console.log("done", secondCompress);
+          if (done && secondCompress) {
+            words = secondCompress + done; //+ thirdCompress;
+          }
+        }
+
+        result.innerHTML = s ? words : "";
+
+        highlight(result.innerHTML);
+        return words;
+      }
+
+      function findDuplicateWord(s) {
+        let selector = [];
+        for (let q = 1; q < s.length; q++) {
+          for (let i = 0; i < s.length; i++) {
+            const sliced = s.slice(i, i + q);
+            const next = s.slice(i + q, i + q + q);
+            if (sliced.length < q) continue;
+            if (
+              s.match(new RegExp(sliced, "g")).length > 1 &&
+              next === sliced
+            ) {
+              selector.push(sliced);
+            }
+          }
+        }
+
+        /* 마지막 문자가 제일 압축률이 큼. 혹은 길이가 같은 문자가 더 있다면 모두 추출 */
+        const filterSelector = duplicateItemRemove(selector);
+        const filtereds = filterSelector.filter(
+          (item) =>
+            item.length ===
+              selector[selector.length - 1].length /*  || item.length > 1 */ ||
+            !!filterSelector.find((it) => {
+              // console.log("filter word", item);
+              return (
+                !it.includes(item) ||
+                (it.match(new RegExp(`(${item})`, "g")).length || 0) <= 1
+              );
+            })
+        );
+
+        /* 마지막 문자보다 더 짧은 문자 중 마지막 문자에 포함되는 문자가 있을 시 배제한다. */
+
+        const filtered = duplicateItemRemove(
+          filtereds.map((filter) => duplicateRemove(filter))
+        );
+        const completeFiltered = filtered.filter((item, i) => {
+          const currentIndex = filtered.indexOf(item);
+          const others = filtered
+            .slice(0, currentIndex)
+            .concat(...filtered.slice(currentIndex + 1));
+          return (
+            filtered[i] === filtered[filtered.length - 1] ||
+            others
+              .reverse()
+              .every((it) => !it.includes(duplicateRemove(item))) ||
+            others
+              .reverse()
+              .every(
+                (it) =>
+                  !it.includes(item) ||
+                  (it.includes(item) &&
+                    (it.match(new RegExp(`(${item})`, "g"))?.length || 0) <=
+                      1 &&
+                    item.length === 1 &&
+                    it.slice(
+                      it.indexOf(item),
+                      it.indexOf(item) + item.length
+                    ) !==
+                      it.slice(
+                        it.indexOf(item) + item.length,
+                        it.indexOf(item) + item.length + item.length
+                      ))
+              )
+          );
+        });
+        console.log("complete filtered", completeFiltered);
+        // if (!window.parent.completeFiltered) {
+        //   window.parent.completeFiltered = [];
+        // }
+        window.parent.completeFiltered.push(...completeFiltered);
+        console.log(completeFiltered);
+        return completeFiltered;
+      }
     </script>
   </body>
 </html>

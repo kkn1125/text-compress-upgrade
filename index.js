@@ -116,9 +116,15 @@ function solution(s) {}
 function duplicateRemove(s) {
   let words = s;
   for (let i = 0; i < s.length; i++) {
-    words = words.replace(new RegExp(`[${words.at(i)}]+`, "g"), ($1) => $1[0]);
+    if (words.replace(new RegExp(`[${words.at(i)}]+`, "g"), "") === "") {
+      words = words.replace(
+        new RegExp(`[${words.at(i)}]+`, "g"),
+        ($1) => $1[0]
+      );
+    } else {
+      words = words;
+    }
   }
-  // console.log("dup remove", s, words);
   return words;
 }
 
@@ -131,17 +137,27 @@ function duplicateItemRemove(arr) {
 }
 
 function compress(s) {
+  if (s.trim() === "") {
+    this?.classList?.add?.("error");
+    setTimeout(() => {
+      this?.removeAttribute?.("class");
+    }, 300);
+    return;
+  }
+  this?.classList?.add?.("clicked");
+  setTimeout(() => {
+    this?.removeAttribute?.("class");
+  }, 150);
   let count = 0;
   let words = s;
   for (let word of findDuplicateWord(s).reverse()) {
-    // console.log("word", words, word);
     const counted = words.replace(new RegExp(word, "g"), ($1, i) => {
-      console.log("slice", words.slice(i, word.length + i), i);
-      console.log(
-        "next",
-        words.slice(word.length + i, i + word.length * 2),
-        word.length + i
-      );
+      // console.log("slice", words.slice(i, word.length + i), i);
+      // console.log(
+      //   "next",
+      //   words.slice(word.length + i, i + word.length * 2),
+      //   word.length + i
+      // );
       if (
         i === 0 ||
         i + word.length === words.indexOf(word, i + 1) ||
@@ -149,27 +165,44 @@ function compress(s) {
           words.slice(i + word.length, i + word.length * 2)
       ) {
         count++;
-        console.log("continue", $1, i);
+        // console.log("continue", $1, i);
         return "";
       } else if (
         (i !== 0 && i + word.length !== words.indexOf(word, i + 1)) ||
         words.slice(i, word.length + i) !==
           words.slice(i + word.length, i + word.length * 2)
       ) {
-        console.log("done", word, i);
+        // console.log("done", word, i);
         count++;
         let temp = count;
         count = 0;
         return (temp > 1 ? temp : "") + $1;
       } else {
         count = 0;
-        console.log("jump to other word");
+        // console.log("jump to other word");
         return $1;
       }
     });
-    console.log("counted", counted);
+    // console.log("counted", counted);
     words = counted;
   }
+  // return words;
+
+  const split = words.slice(0, words.match(/[0-9]/).index);
+  console.log("words", words);
+  if (findDuplicateWord(split).length > 0) {
+    const secondCompress = compress(split);
+    const done = words.slice(words.match(/[0-9]/).index);
+    console.log("done", done);
+    console.log("done", secondCompress);
+    if (done && secondCompress) {
+      words = secondCompress + done;
+    }
+  }
+
+  result.innerHTML = s ? words : "";
+
+  highlight(result.innerHTML);
   return words;
 }
 
@@ -191,7 +224,7 @@ function findDuplicateWord(s) {
 
   /* 마지막 문자가 제일 압축률이 큼. 혹은 길이가 같은 문자가 더 있다면 모두 추출 */
   const filterSelector = duplicateItemRemove(selector);
-  const filtered = filterSelector.filter(
+  const filtereds = filterSelector.filter(
     (item) =>
       item.length ===
         selector[selector.length - 1].length /*  || item.length > 1 */ ||
@@ -206,7 +239,9 @@ function findDuplicateWord(s) {
 
   /* 마지막 문자보다 더 짧은 문자 중 마지막 문자에 포함되는 문자가 있을 시 배제한다. */
   // console.log("filtered", filtered);
-
+  const filtered = duplicateItemRemove(
+    filtereds.map((filter) => duplicateRemove(filter))
+  );
   const completeFiltered = filtered.filter((item, i) => {
     const currentIndex = filtered.indexOf(item);
     const others = filtered
@@ -222,15 +257,13 @@ function findDuplicateWord(s) {
             !it.includes(item) ||
             (it.includes(item) &&
               (it.match(new RegExp(`(${item})`, "g"))?.length || 0) <= 1 &&
-              item.length === 1)
+              item.length === 1) ||
+            it.slice(it.indexOf(item), it.indexOf(item) + item.length) ===
+              it.slice(
+                it.indexOf(item) + item.length,
+                it.indexOf(item) + item.length + item.length
+              )
         )
-      // others.find((it) => {
-      //   console.log("two filter word", item);
-      //   return (
-      //     !it.includes(item) ||
-      //     (it.match(new RegExp(`[${item}]+`, "g")).length || 0) <= 1
-      //   );
-      // })
     );
   });
   console.log("complete filtered", completeFiltered);
