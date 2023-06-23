@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text Compress Algorithm Upgrade Test</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        user-select: none;
+      }
+      body {
+        width: 35%;
+        margin: auto;
+      }
+      blockquote {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 2rem;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        border-left: 5px solid #ccc;
+        background-color: #cccccc26;
+      }
+      :is(h1, h2, h3, h4, h5, h6)::before {
+        content: "📑";
+      }
+      p {
+        margin: 0;
+        margin-bottom: 0.5rem;
+        padding: 0.1rem 0.1rem;
+      }
+      .hightlight {
+        background-color: #4394f126;
+        transition: 150ms ease-in-out;
+      }
+      .hightlight:hover {
+        color: #ffffff;
+        background-color: #4394f1;
+      }
+      li[onclick] {
+        cursor: pointer;
+      }
+      li[onclick]:hover {
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="md"></div>
+    <script>
+      window.parent.temp = "";
+      const headers = [];
+      fetch(location.origin + "/README.md").then(async (res) => {
+        window.parent.temp = await res.text();
+        let countBlock = 1;
+        let blocks = [];
+        md.innerHTML = window.parent.temp
+          .split("\n")
+          .filter((f) => f.trim())
+          .map((li) => {
+            //console.log(li);
+            li = li.replace(
+              /\*{2}(.+)\*{2}/g,
+              ($$, $$$) => `<strong>${$$$}</strong>`
+            );
+            let blockquote = [];
+            if (li.match("#")) {
+              countBlock += 1;
+              const title = li.replace(/[#]+/g, "").trim();
+              headers.push({
+                order: li.match(/#/g).length,
+                head: title,
+              });
+              return `<h${
+                li.match(/#/g).length
+              } id="${title}" onclick="location = '#${title}'" style="cursor: pointer;">${title
+                .toUpperCase()
+                .replace("-", " ")}</h1>`;
+            } else if (li.startsWith(">")) {
+              if (!blocks.find((block) => block.id === countBlock)) {
+                blocks.push({ id: countBlock });
+                const bl = document.createElement("blockquote");
+                bl.id = `block-${countBlock}`;
+                return bl.outerHTML;
+              } else {
+                const find = blocks.find((block) => block.id === countBlock);
+                if (!find.words) {
+                  find.words = [];
+                }
+                find.words.push(li.replace(/\>+/g, "").trim());
+                return "";
+              }
+            } else {
+              countBlock += 1;
+              return `<p${
+                li.match(/[0-9]/g) ? ' class="hightlight"' : ""
+              }>${li}</p>`;
+            }
+          })
+          .filter((a) => a)
+          .join("");
+        blocks.forEach((block) => {
+          if (block.words) {
+            document.getElementById(`block-${block.id}`).innerHTML = block.words
+              .map((word) => `<div>${word}</div>`)
+              .join("");
+          }
+        });
+        //console.log(headers);
+        md.insertAdjacentHTML(
+          "beforebegin",
+          `<h1>Indexes</h1> <ol>
+${headers
+  .map((header) => {
+    return `<li onclick="location = '#${header.head}'">${header.head}</li>`;
+  })
+  .join("\n")}
+</pre>`
+        );
+      });
+    </script>
+  </body>
+</html>
